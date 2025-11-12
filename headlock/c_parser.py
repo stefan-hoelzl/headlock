@@ -465,11 +465,13 @@ class CParser:
             if not self.is_sys_hdr(incl_file_path):
                 self.source_files.add(self.resolve(incl_file_path))
         errors = [diag for diag in tu.diagnostics
-                   if diag.severity >= diag.Error]
+                   if diag.severity >= diag.Error
+                   and diag.location.file is not None
+                   and not self.is_sys_hdr(diag.location.file.name)]
         if errors:
             raise ParseError([
                 (err.spelling, err.location.file.name, err.location.line)
-                for err in errors if err.location.file is not None])
+                for err in errors])
         self.read_from_cursor(tu.cursor)
         filenames = set(map(operator.itemgetter(0), self.macro_locs.values()))
         files = {self.resolve(fn): Path(fn).read_bytes() for fn in filenames}
